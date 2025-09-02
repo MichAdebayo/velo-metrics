@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 
-API_URL = "http://localhost:8000/"
+API_URL = "http://localhost:8001/"
 
 def get_user_info():
     """Get user information"""
@@ -14,7 +14,7 @@ def get_user_info():
     elif response.status_code == 401:
         st.error("Unauthorized: Invalid or expired token. Please log in again.")
         st.session_state.token = None # Clear the invalid token from session state
-        st.experimental_rerun() # Force a rerun to display the login screen
+        st.rerun() # Force a rerun to display the login screen
         return None # Explicitly return None to avoid further errors
     else:
         st.error(f"Failed to get user information: Status code {response.status_code}")

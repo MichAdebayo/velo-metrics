@@ -9,7 +9,11 @@ from database import get_db_connection
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use bcrypt as preferred, but include pbkdf2_sha256 as a fallback so
+# development environments without a working bcrypt backend can still
+# create and verify passwords. In production you should ensure bcrypt
+# is installed and used.
+password_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:

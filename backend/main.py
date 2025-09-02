@@ -49,5 +49,5 @@ if __name__ == "__main__" and threading.current_thread() is threading.main_threa
     # Streamlit executes modules in worker threads which causes
     # `ValueError: signal only works in main thread of the main interpreter`
     # when uvicorn attempts to set signal handlers for reloading.
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(app, host="127.0.0.1", port=8001, reload=True)
 

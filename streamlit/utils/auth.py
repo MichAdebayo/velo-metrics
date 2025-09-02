@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from utils.api import get_user_info_by_username 
 
-API_URL = "http://localhost:8000/"
+API_URL = "http://localhost:8001/"
 
 def login(username: str, password: str):
     """
