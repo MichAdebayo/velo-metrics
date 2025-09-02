@@ -13,6 +13,8 @@ if "token" not in st.session_state:
     st.session_state.token = None
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
+if "is_staff" not in st.session_state:
+    st.session_state.is_staff = None
 
 # Check if user is authenticated
 if not check_authentication():
@@ -32,12 +34,8 @@ if not check_authentication():
                 st.error(message)
 else:
     if user_info := get_user_info():
-    # Display welcome message
+        # Display welcome message
         st.title(f"Welcome, {user_info['first_name']} {user_info['last_name']}")
-
-    if user_info:
-        st.session_state.role = "admin" if user_info.get("is_staff") else "athlete"
-    
     else:
         st.error("Failed to retrieve user information. Please log in again.")
         st.session_state.token = None # Clear invalid token
@@ -48,42 +46,32 @@ else:
         st.session_state.role = None
         st.session_state.token = None
         st.session_state.user_id = None
+        st.session_state.is_staff = None
         st.rerun()
 
-    # Define all pages that should be accessible in your app
-    home = st.Page("app.py", title="Home", icon="🏠")
-    admin_dashboard = st.Page("pages/admin_dashboard.py", title="Admin Dashboard", icon="📊")
-    user_management = st.Page("pages/user_management.py", title="User Management", icon="👥")
-    performance_management = st.Page("pages/performance_management.py", title="Performance Management", icon="📈")
-    athlete_dashboard = st.Page("pages/athlete_dashboard.py", title="Athlete Dashboard", icon="🏠")
-    athlete_profile = st.Page("pages/athlete_profile.py", title="My Profile", icon="👤")
-    performance_history = st.Page("pages/performance_history.py", title="Performance History", icon="📊")
-
-    # Make all pages available but hide the default navigation
-    all_pages = [
-        home, admin_dashboard, user_management, performance_management,
-        athlete_dashboard, athlete_profile, performance_history
-    ]
-    page = st.navigation(all_pages, position="hidden")
-
-    # Create your custom navigation in the sidebar based on role
+        # Custom navigation based on role
     if st.session_state.role == "admin":
-        st.sidebar.title("Admin Navigation")
-        st.sidebar.page_link("pages/admin_dashboard.py", label="Admin Dashboard", icon="📊")
-        st.sidebar.page_link("pages/user_management.py", label="User Management", icon="👥")
-        st.sidebar.page_link("pages/performance_management.py", label="Performance Management", icon="📈")
+        pages = [
+            st.Page("pages/admin_dashboard.py", title="Admin Dashboard", icon="📊"),
+            st.Page("pages/data_management.py", title="Data Management", icon="📥"),
+            st.Page("pages/user_management.py", title="User Management", icon="👥"),
+            st.Page("pages/performance_management.py", title="Performance Management", icon="📈"),
+            st.Page("pages/statistics.py", title="Statistics", icon="📊"),
+        ]
+        pg = st.navigation(pages)
+        pg.run()
    
     elif st.session_state.role == "athlete":
-        st.sidebar.title("Athlete Navigation")
-        st.sidebar.page_link("pages/athlete_dashboard.py", label="Dashboard", icon="🏠")
-        st.sidebar.page_link("pages/athlete_profile.py", label="My Profile", icon="👤")
-        st.sidebar.page_link("pages/performance_history.py", label="Performance History", icon="📊")
+        pages = [
+            st.Page("pages/athlete_dashboard.py", title="Dashboard", icon="🏠"),
+            st.Page("pages/athlete_profile.py", title="My Profile", icon="👤"),
+            st.Page("pages/performance_history.py", title="Performance History", icon="📊"),
+        ]
+        pg = st.navigation(pages)
+        pg.run()
 
     else:
         st.error("Invalid role. Please log in again.")
         st.session_state.token = None
         st.session_state.role = None
         st.rerun()
-
-    # Run the current page
-    page.run()

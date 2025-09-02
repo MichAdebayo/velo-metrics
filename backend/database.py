@@ -1,6 +1,6 @@
 import sqlite3
-from config import settings
 import os
+from .config import settings
 
 
 def _db_path() -> str:
@@ -10,6 +10,9 @@ def _db_path() -> str:
     hardcoding different filenames across the repo.
     """
     if getattr(settings, "DATABASE_URL", None):
+        # If DATABASE_URL is just a filename, resolve it relative to project root
+        if not os.path.isabs(settings.DATABASE_URL):
+            return os.path.join(os.path.dirname(os.path.dirname(__file__)), settings.DATABASE_URL)
         return settings.DATABASE_URL
     # fallback to a single default DB in the repo root
     return os.path.join(os.path.dirname(os.path.dirname(__file__)), "cyclist_database.db")
@@ -87,6 +90,7 @@ def initialize_database():
     create_performance_table()
 
 def reset_database():
-    if os.path.exists(settings.DATABASE_URL):
-        os.remove(settings.DATABASE_URL)
+    db_path = _db_path()
+    if os.path.exists(db_path):
+        os.remove(db_path)
     initialize_database()

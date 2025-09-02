@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from utils.auth import check_authentication
-from utils.api import get_all_users, register_user, add_athlete
+from utils.api import get_all_users, register_user, add_athlete, API_URL
+import requests
 
 # Check authentication
 if not check_authentication():
@@ -76,7 +77,6 @@ with tab1:
                         
                         if submit:
                             # Call API to update user
-                            import requests
                             headers = {"Authorization": f"Bearer {st.session_state.token}"}
                             data = {
                                 "first_name": first_name,
@@ -85,7 +85,7 @@ with tab1:
                                 "is_staff": is_staff
                             }
                             response = requests.patch(
-                                f"http://your-fastapi-url/api/users/{selected_user_id}",
+                                f"{API_URL}/users/{selected_user_id}",
                                 json=data,
                                 headers=headers
                             )
@@ -101,10 +101,9 @@ with tab1:
                     # Confirm deletion
                     if st.checkbox("I understand this action cannot be undone"):
                         # Call API to delete user
-                        import requests
                         headers = {"Authorization": f"Bearer {st.session_state.token}"}
                         response = requests.delete(
-                            f"http://your-fastapi-url/api/users/{selected_user_id}",
+                            f"{API_URL}/users/{selected_user_id}",
                             headers=headers
                         )
                         
@@ -179,7 +178,7 @@ with tab3:
                 import requests
                 headers = {"Authorization": f"Bearer {st.session_state.token}"}
                 response = requests.get(
-                    f"http://your-fastapi-url/api/athletes/get_athlete_details/{selected_athlete_id}",
+                    f"{API_URL}/athletes/get_athlete_details/{selected_athlete_id}",
                     headers=headers
                 )
                 
@@ -206,7 +205,7 @@ with tab3:
                                 "height": height
                             }
                             response = requests.patch(
-                                f"http://your-fastapi-url/api/athletes/edit_athlete/{selected_athlete_id}",
+                                f"{API_URL}/athletes/edit_athlete/{selected_athlete_id}",
                                 json=data,
                                 headers=headers
                             )
@@ -220,7 +219,7 @@ with tab3:
                     if st.button("Delete Athlete Details"):
                         if st.checkbox("I understand this action cannot be undone"):
                             response = requests.delete(
-                                f"http://your-fastapi-url/api/athletes/delete_athlete/{selected_athlete_id}",
+                                f"{API_URL}/athletes/delete_athlete/{selected_athlete_id}",
                                 headers=headers
                             )
                             

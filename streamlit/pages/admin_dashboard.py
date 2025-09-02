@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from utils.auth import check_authentication
-from utils.api import get_all_users, get_stats
+from utils.api import get_all_users, get_stats, API_URL
+import requests
 
 # Check authentication
 if not check_authentication():
@@ -37,18 +38,17 @@ if stats:
 
     with tab1:
         # Get details of strongest athlete
-        strongest_id = stats["strongest_athlete"][0]
+        strongest_id = stats["strongest_athlete"]
         st.write(f"**Strongest Athlete ID:** {strongest_id}")
 
         # Display button to view details
         if st.button("View Strongest Athlete Details", key="view_strongest"):
             # Call API to get athlete details and performance
-            import requests
             headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
-            user_response = requests.get(f"http://your-fastapi-url/api/users/{strongest_id}", headers=headers)
-            athlete_response = requests.get(f"http://your-fastapi-url/api/athletes/get_athlete_details/{strongest_id}", headers=headers)
-            performance_response = requests.get(f"http://your-fastapi-url/api/performance/user/{strongest_id}", headers=headers)
+            user_response = requests.get(f"{API_URL}/users/{strongest_id}", headers=headers)
+            athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{strongest_id}", headers=headers)
+            performance_response = requests.get(f"{API_URL}/performance/user/{strongest_id}", headers=headers)
 
             if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
                 user_data = user_response.json()
@@ -77,18 +77,17 @@ if stats:
 
     with tab2:
         # Get details of highest VO2 Max athlete
-        vo2max_id = stats["highest_vo2max"][0]
+        vo2max_id = stats["highest_vo2max"]
         st.write(f"**Highest VO2 Max Athlete ID:** {vo2max_id}")
 
         # Display button to view details
         if st.button("View Highest VO2 Max Athlete Details", key="view_vo2max"):
             # Similar API calls as above
-            import requests
             headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
-            user_response = requests.get(f"http://your-fastapi-url/api/users/{vo2max_id}", headers=headers)
-            athlete_response = requests.get(f"http://your-fastapi-url/api/athletes/get_athlete_details/{vo2max_id}", headers=headers)
-            performance_response = requests.get(f"http://your-fastapi-url/api/performance/user/{vo2max_id}", headers=headers)
+            user_response = requests.get(f"{API_URL}/users/{vo2max_id}", headers=headers)
+            athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{vo2max_id}", headers=headers)
+            performance_response = requests.get(f"{API_URL}/performance/user/{vo2max_id}", headers=headers)
 
             if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
                 user_data = user_response.json()
@@ -125,8 +124,33 @@ if stats:
         # Display button to view details
         if st.button("View Best Power-to-Weight Athlete Details", key="view_pwr"):
             # Similar API calls as above
-            # Display relevant metrics and charts
-            pass
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+            user_response = requests.get(f"{API_URL}/users/{pwr_id}", headers=headers)
+            athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{pwr_id}", headers=headers)
+            performance_response = requests.get(f"{API_URL}/performance/user/{pwr_id}", headers=headers)
+
+            if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
+                user_data = user_response.json()
+                athlete_data = athlete_response.json()["athlete"]
+                performance_data = performance_response.json()
+
+                st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
+                st.write(f"**Age:** {athlete_data['age']}")
+                st.write(f"**Gender:** {athlete_data['gender']}")
+
+                # Display max ratio
+                max_ratio = pwr_ratio
+                st.metric("Best Power-to-Weight Ratio", f"{max_ratio:.2f} W/kg")
+
+                # Plot ratio over time
+                if performance_data:
+                    df = pd.DataFrame(performance_data)
+                    df['ratio'] = df['power_max'] / athlete_data['weight']
+                    fig = px.line(df, x="date", y="ratio", title="Power-to-Weight Ratio Over Time")
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.error("Failed to load athlete details")
 
 # Display overall performance trends
 st.subheader("Overall Performance Trends")

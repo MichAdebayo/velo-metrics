@@ -9,8 +9,8 @@ import sys
 # the `src.` prefix.
 sys.path.insert(0, os.path.dirname(__file__))
 
-from routers import user, athlete, performance, auth
-from database import initialize_database
+from .routers import user, athlete, performance, auth
+from .database import initialize_database
 from contextlib import asynccontextmanager
 import uvicorn
 import threading

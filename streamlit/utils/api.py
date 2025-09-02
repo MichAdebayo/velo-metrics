@@ -106,10 +106,10 @@ def get_performances(user_id):
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
         if st.session_state.is_staff:
-            response = requests.get(f"{API_URL}/performances/user/{user_id}", headers=headers)
+            response = requests.get(f"{API_URL}/performance/user/{user_id}", headers=headers)
         else:
 
-            response = requests.get(f"{API_URL}/performances/my-stats", headers=headers)
+            response = requests.get(f"{API_URL}/performance/my-stats", headers=headers)
 
         if response.status_code == 200:
             return response.json()
@@ -146,7 +146,7 @@ def update_performance(performance_id, power, vo2_max, heart_rate, respiration_f
             return False
 
         response = requests.patch(
-            f"{API_URL}/performances/{performance_id}",
+            f"{API_URL}/performance/{performance_id}",
             headers=headers,
             json={
                 "user_id": current_perf["user_id"],
@@ -172,7 +172,7 @@ def delete_performance(performance_id):
     try:
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
         response = requests.delete(
-            f"{API_URL}/performances/{performance_id}",
+            f"{API_URL}/performance/{performance_id}",
             headers=headers
         )
 
@@ -187,7 +187,7 @@ def delete_performance(performance_id):
 def get_performances_by_username(username):
     try:
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
-        response = requests.get(f"{API_URL}/performances/user_name/{username}", headers=headers)
+        response = requests.get(f"{API_URL}/performance/user_name/{username}", headers=headers)
 
         if response.status_code == 200:
             return response.json()

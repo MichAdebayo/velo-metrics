@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from utils.auth import check_authentication
-from utils.api import get_all_users, get_performance_history, add_performance
+from utils.api import get_all_users, get_performance_history, add_performance, API_URL
+import requests
 
 # Check authentication
 if not check_authentication():
@@ -93,6 +94,7 @@ if not users_df.empty:
                     if submit := st.form_submit_button("Add Performance"):
                         # Call API to add performance
                         performance_data = {
+                            "user_id": selected_athlete_id,
                             "power_max": power_max,
                             "hr_max": hr_max,
                             "vo2_max": vo2_max,
@@ -101,14 +103,13 @@ if not users_df.empty:
                         }
 
                         # We need to use the current user's token but add performance for the selected athlete
-                        import requests
                         headers = {"Authorization": f"Bearer {st.session_state.token}"}
 
                         # This is a workaround since the API expects the current user's ID
                         # We might need to modify the API to accept a user_id parameter
                         response = requests.post(
-                            "http://127.0.0.1:8000/performance/add_performance",
-                            json=performance_data,
+                            f"{API_URL}/performance/add_performance",
+                            json=[performance_data],
                             headers=headers,
                         )
 
@@ -177,7 +178,7 @@ if not users_df.empty:
                                     import requests
                                     headers = {"Authorization": f"Bearer {st.session_state.token}"}
                                     response = requests.patch(
-                                        f"http://127.0.0.1:8000/performance/edit_performance/{performance_id}",
+                                        f"{API_URL}/performance/{performance_id}",
                                         json=performance_data,
                                         headers=headers
                                     )
@@ -194,7 +195,7 @@ if not users_df.empty:
                                 import requests
                                 headers = {"Authorization": f"Bearer {st.session_state.token}"}
                                 response = requests.delete(
-                                    f"http://127.0.0.1:8000/performance/delete_performance/{performance_id}",
+                                    f"{API_URL}/performance/{performance_id}",
                                     headers=headers
                                 )
 

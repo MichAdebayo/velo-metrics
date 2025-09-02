@@ -1,8 +1,17 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from utils.api import get_stats, get_performances, get_performances_by_username
+from utils.auth import check_authentication
+from utils.api import get_stats, get_performances, get_performances_by_username, get_all_users, API_URL
 import requests
+
+# Check authentication
+if not check_authentication():
+    st.switch_page("app.py")
+
+if st.session_state.role != "admin":
+    st.error("You don't have permission to access this page")
+    st.stop()
 
 def show_statistics():
     st.title("Statistiques globales")
@@ -24,23 +33,14 @@ def show_statistics():
         with col3:
             st.metric("Meilleur ratio puissance/poids", stats.get('best_power_weight_ratio', "Non disponible"))
 
-        API_URL = "http://127.0.0.1:8000"
-        headers = {"Authorization": f"Bearer {st.session_state.token}"}
-
-        try:
-            response = requests.get(f"{API_URL}/performances/all_users", headers=headers)
-            if response.status_code == 200:
-                all_users = response.json()
-                user_names = [user.get('user_name', f"User {user.get('id')}") for user in all_users]
-                user_ids = [user.get('id') for user in all_users]
-                name_to_id = {user.get('user_name'): user.get('id') for user in all_users}
-            else:
-                user_names = []
-                user_ids = list(range(1, 10))
-                name_to_id = {}
-        except Exception:
+        users_df = get_all_users(st.session_state.token)
+        if not users_df.empty:
+            user_names = users_df['user_name'].tolist()
+            user_ids = users_df['id'].tolist()
+            name_to_id = dict(zip(users_df['user_name'], users_df['id']))
+        else:
             user_names = []
-            user_ids = list(range(1, 10))
+            user_ids = []
             name_to_id = {}
 
         st.subheader("Comparaison des performances")
@@ -126,3 +126,6 @@ def show_performance_comparison(athlete_ids, name_to_id=None):
         st.plotly_chart(fig2, use_container_width=True)
     else:
         st.info("Aucune donnée de performance disponible.")
+
+# Call the function to execute the page
+show_statistics()

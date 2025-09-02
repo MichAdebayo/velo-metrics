@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.auth import check_authentication
-from utils.api import get_athlete_details, get_user_info
+from utils.api import get_athlete_details, get_user_info, API_URL
 
 # Check authentication
 if not check_authentication():
@@ -13,7 +13,7 @@ if st.session_state.role != "athlete":
 st.title("My Profile")
 
 # Get user and athlete info
-user_info = get_user_info(st.session_state.user_id, st.session_state.token)
+user_info = get_user_info()
 athlete = get_athlete_details(st.session_state.user_id, st.session_state.token)
 
 if not user_info:
@@ -57,7 +57,7 @@ if athlete:
                 "height": height
             }
             response = requests.patch(
-                f"http://your-fastapi-url/api/athletes/edit_athlete/{st.session_state.user_id}",
+                f"{API_URL}/athletes/edit_athlete/{st.session_state.user_id}",
                 json=data,
                 headers=headers
             )
