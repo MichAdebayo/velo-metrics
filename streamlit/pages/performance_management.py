@@ -68,14 +68,18 @@ if selection_method == "Browse all athletes":
                         key="view_metric"
                     )
 
-                    # Create line chart
-                    fig = px.line(
+                    # Create bar chart
+                    x_axis = "test_type" if "test_type" in performance_df.columns else performance_df.index
+                    max_val = performance_df[metric].max()
+                    y_range = [0, max_val * 1.1 if max_val > 0 else 10]
+                    fig = px.bar(
                         performance_df,
-                        x="date" if "date" in performance_df.columns else performance_df.index,
+                        x=x_axis,
                         y=metric,
-                        title=f"{metric.replace('_', ' ').title()} Over Time"
+                        title=f"{metric.replace('_', ' ').title()} by Test Type",
+                        color_discrete_sequence=["#4682B4"]  # Soft steel blue
                     )
-
+                    fig.update_yaxes(range=y_range)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("No performance data available for this athlete.")
@@ -266,13 +270,18 @@ else:  # Search by username
                         )
 
                         # Create line chart
-                        fig = px.line(
+                        # Create bar chart
+                        x_axis = "test_type" if "test_type" in performance_df.columns else performance_df.index
+                        max_val = performance_df[metric].max()
+                        y_range = [0, max_val * 1.1 if max_val > 0 else 10]
+                        fig = px.bar(
                             performance_df,
-                            x="date" if "date" in performance_df.columns else performance_df.index,
+                            x=x_axis,
                             y=metric,
-                            title=f"{metric.replace('_', ' ').title()} Over Time"
+                            title=f"{metric.replace('_', ' ').title()} by Test Type",
+                            color_discrete_sequence=["#4682B4"]  # Soft steel blue
                         )
-
+                        fig.update_yaxes(range=y_range)
                         st.plotly_chart(fig, use_container_width=True)
                     else:
                         st.info("No performance data available for this athlete.")
