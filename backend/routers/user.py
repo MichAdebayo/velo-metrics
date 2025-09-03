@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
-from ..models.user import UserCreate, UserRead
+from ..models.user import UserCreate, UserRead, AthleteWithPerformance
 from ..utils.security import hash_password, get_current_user
 from ..database import get_db_connection
+from typing import List
 import sqlite3
 
 router = APIRouter(tags=["users"])  
@@ -83,7 +84,8 @@ def get_athletes_with_performance(current_user: dict = Depends(get_current_user)
     """)
     athletes = cursor.fetchall()
     conn.close()
-    return athletes
+    # Convert sqlite3.Row objects to plain dicts so Pydantic can validate/serialize them
+    return [dict(row) for row in athletes]
 
 @router.patch("/users/{user_id}")
 def update_user(user_id: int, user: dict, current_user: dict = Depends(get_current_user)):
@@ -101,7 +103,7 @@ def update_user(user_id: int, user: dict, current_user: dict = Depends(get_curre
     last_name = user.get("last_name", row[1])
     user_name = user.get("user_name", row[2])
     email = user.get("email", row[3])
-    password = user.get("password", None)
+    password = user.get("password")
     is_staff = int(user.get("is_staff", row[5]))
     # Only update password if provided and not blank
     if password and password != "dummy_password":

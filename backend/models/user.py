@@ -21,3 +21,13 @@ class UserRead(UserCreate):
     user_name: str
     email: str
     is_staff: int
+
+class AthleteWithPerformance(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    user_name: str
+    email: str
+    is_staff: int
+    weight: float
+    height: float

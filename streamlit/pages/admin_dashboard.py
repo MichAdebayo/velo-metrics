@@ -19,6 +19,22 @@ st.title("Admin Dashboard")
 users_df = get_all_users(st.session_state.token)
 stats = get_stats()
 
+# Quick debug helper visible to admins to diagnose API auth / endpoint issues
+with st.expander("Debug: API checks (show/hide)"):
+    token_present = bool(st.session_state.get("token"))
+    st.write("Token present:", token_present)
+    if token_present:
+        try:
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+            resp1 = requests.get(f"{API_URL}/users/athletes-with-performance", headers=headers)
+            st.write("/users/athletes-with-performance ->", resp1.status_code, "| rows:", len(resp1.json()) if resp1.status_code == 200 else "-")
+            resp2 = requests.get(f"{API_URL}/performance/all_performances", headers=headers)
+            st.write("/performance/all_performances ->", resp2.status_code, "| rows:", len(resp2.json()) if resp2.status_code == 200 else "-")
+        except Exception as e:
+            st.write("API check error:", str(e))
+    else:
+        st.info("Not logged in or token missing — log in as admin to run API checks.")
+
 tab1, tab2 = st.tabs(["Overview & Trends", "Compare Athletes"])
 
 with tab1:
@@ -149,12 +165,22 @@ with tab1:
     try:
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
         response = requests.get(f"{API_URL}/performance/all_performances", headers=headers)
-        athletes_response = requests.get(f"{API_URL}/users/athletes-with-performance", headers=headers)
-        if response.status_code == 200 and athletes_response.status_code == 200:
+        if response.status_code == 200:
             all_perf = pd.DataFrame(response.json())
-            athletes_df = pd.DataFrame(athletes_response.json())
-            if not all_perf.empty and not athletes_df.empty:
-                athlete_weights = dict(zip(athletes_df["id"], athletes_df["weight"]))
+            if not all_perf.empty:
+                # Fetch weights per athlete to avoid relying on the bulk endpoint (which may return 422)
+                unique_ids = all_perf['user_id'].unique().tolist()
+                athlete_weights = {}
+                for uid in unique_ids:
+                    athlete_resp = requests.get(f"{API_URL}/athletes/get_athlete_details/{uid}", headers=headers)
+                    if athlete_resp.status_code == 200:
+                        try:
+                            athlete_weights[uid] = athlete_resp.json().get('athlete', {}).get('weight')
+                        except Exception:
+                            athlete_weights[uid] = None
+                    else:
+                        athlete_weights[uid] = None
+
                 all_perf["weight"] = all_perf["user_id"].map(athlete_weights)
                 all_perf["power_weight_ratio"] = all_perf.apply(lambda r: r["power_max"] / r["weight"] if r["weight"] not in [None, 0, np.nan] and r["weight"] > 0 else np.nan, axis=1)
                 agg = all_perf.groupby("test_type").agg({
@@ -185,21 +211,13 @@ with tab1:
 
 with tab2:
     st.subheader("Compare Athletes")
-    athletes_response = requests.get(f"{API_URL}/users/athletes-with-performance", headers={"Authorization": f"Bearer {st.session_state.token}"})
-    if athletes_response.status_code == 200:
-        athletes_df = pd.DataFrame(athletes_response.json())
-        if not athletes_df.empty:
-            user_names = athletes_df['user_name'].tolist()
-            user_ids = athletes_df['id'].tolist()
-            name_to_id = dict(zip(athletes_df['user_name'], athletes_df['id']))
-        else:
-            user_names = []
-            user_ids = []
-            name_to_id = {}
+    # Build athlete selection from users list (which is trusted) and fetch weights per-athlete when needed
+    users_df_local = get_all_users(st.session_state.token)
+    if not users_df_local.empty:
+        user_names = users_df_local['user_name'].tolist()
+        name_to_id = dict(zip(users_df_local['user_name'], users_df_local['id']))
     else:
-        st.error("Failed to fetch athlete data for comparison.")
         user_names = []
-        user_ids = []
         name_to_id = {}
 
     selected_names = st.multiselect("Select Athletes to Compare (by name)", options=user_names)
@@ -210,16 +228,20 @@ with tab2:
         for aid in selected_ids:
             perfs = get_performances(aid)
             if perfs:
-                athlete_row = athletes_df[athletes_df['id'] == aid].iloc[0]
-                athlete_name = f"{athlete_row['first_name']} {athlete_row['last_name']}"
-                weight = athlete_row["weight"] if "weight" in athlete_row else np.nan
+                user_row = users_df_local[users_df_local['id'] == aid].iloc[0]
+                athlete_name = f"{user_row['first_name']} {user_row['last_name']}"
+                # fetch weight from athlete endpoint
+                athlete_resp = requests.get(f"{API_URL}/athletes/get_athlete_details/{aid}", headers={"Authorization": f"Bearer {st.session_state.token}"})
+                weight = None
+                if athlete_resp.status_code == 200:
+                    weight = athlete_resp.json().get('athlete', {}).get('weight')
                 for perf in perfs:
                     compare_data.append({
                         "athlete_name": athlete_name,
-                        "test_type": perf["test_type"],
-                        "power_max": perf["power_max"],
-                        "vo2_max": perf["vo2_max"],
-                        "power_weight_ratio": perf["power_max"] / weight if weight not in [None, 0, np.nan] and weight > 0 else np.nan
+                        "test_type": perf.get("test_type"),
+                        "power_max": perf.get("power_max"),
+                        "vo2_max": perf.get("vo2_max"),
+                        "power_weight_ratio": (perf.get("power_max") / weight) if weight not in [None, 0, np.nan] and weight > 0 else np.nan
                     })
         compare_df = pd.DataFrame(compare_data)
         if not compare_df.empty:
