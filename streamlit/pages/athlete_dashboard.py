@@ -65,82 +65,60 @@ st.subheader("How You Compare")
 
 stats = get_stats()
 if stats:
-    # Get the details of top performers
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         if st.button("Show Strongest Athlete"):
-            strongest_id = stats["strongest_athlete"][0]
-            strongest_athlete = get_athlete_details(strongest_id, st.session_state.token)
-            strongest_performance = get_performance_history(strongest_id, st.session_state.token)
-            
-            if strongest_athlete and not strongest_performance.empty:
-                st.subheader(f"Strongest Athlete (ID: {strongest_id})")
-                st.metric("Max Power", f"{strongest_performance['power_max'].max()} W")
-                
-                # Compare with user's max power
-
-                # Compare with user's max power
+            strongest = stats.get("strongest_athlete")
+            if strongest and strongest.get("max_power") is not None:
+                st.subheader("Strongest Athlete")
+                top_power = strongest["max_power"]
+                st.metric("Max Power", f"{top_power} W")
                 if not performance_df.empty:
                     user_max = performance_df['power_max'].max()
-                    difference = strongest_performance['power_max'].max() - user_max
+                    difference = top_power - user_max
                     st.metric("Your Max Power", f"{user_max} W", delta=f"{-difference} W")
-                    
-                    # Create comparison chart
                     fig = px.bar(
                         x=["You", "Strongest Athlete"],
-                        y=[user_max, strongest_performance['power_max'].max()],
+                        y=[user_max, top_power],
                         title="Power Comparison"
                     )
                     st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         if st.button("Show Highest VO2 Max Athlete"):
-            vo2max_id = stats["highest_vo2max"][0]
-            vo2max_athlete = get_athlete_details(vo2max_id, st.session_state.token)
-            vo2max_performance = get_performance_history(vo2max_id, st.session_state.token)
-            
-            if vo2max_athlete and not vo2max_performance.empty:
-                st.subheader(f"Highest VO2 Max Athlete (ID: {vo2max_id})")
-                st.metric("Max VO2", f"{vo2max_performance['vo2_max'].max()} ml/kg/min")
-                
-                # Compare with user's VO2 max
+            highest_vo2 = stats.get("highest_vo2max")
+            if highest_vo2 and highest_vo2.get("max_vo2") is not None:
+                st.subheader("Highest VO2 Max Athlete")
+                top_vo2 = highest_vo2["max_vo2"]
+                st.metric("Max VO2", f"{top_vo2} ml/kg/min")
                 if not performance_df.empty:
                     user_max = performance_df['vo2_max'].max()
-                    difference = vo2max_performance['vo2_max'].max() - user_max
+                    difference = top_vo2 - user_max
                     st.metric("Your VO2 Max", f"{user_max} ml/kg/min", delta=f"{-difference} ml/kg/min")
-                    
-                    # Create comparison chart
                     fig = px.bar(
                         x=["You", "Highest VO2 Max Athlete"],
-                        y=[user_max, vo2max_performance['vo2_max'].max()],
+                        y=[user_max, top_vo2],
                         title="VO2 Max Comparison"
                     )
                     st.plotly_chart(fig, use_container_width=True)
-    
+
     with col3:
         if st.button("Show Best Power-to-Weight Ratio Athlete"):
-            pwr_id = stats["best_power_weight_ratio"][0]
-            pwr_athlete = get_athlete_details(pwr_id, st.session_state.token)
-            pwr_performance = get_performance_history(pwr_id, st.session_state.token)
-            
-            if pwr_athlete and not pwr_performance.empty:
-                pwr_ratio = stats["best_power_weight_ratio"][1]
-                st.subheader(f"Best Power-to-Weight Athlete (ID: {pwr_id})")
-                st.metric("Power-to-Weight Ratio", f"{pwr_ratio:.2f} W/kg")
-                
-                # Compare with user's power-to-weight ratio
+            best_pwr = stats.get("best_power_weight_ratio")
+            if best_pwr and best_pwr.get("ratio") is not None and best_pwr.get("weight") is not None:
+                top_ratio = best_pwr["ratio"]
+                st.subheader("Best Power-to-Weight Athlete")
+                st.metric("Power-to-Weight Ratio", f"{top_ratio:.2f} W/kg")
                 if not performance_df.empty and athlete:
                     user_max_power = performance_df['power_max'].max()
                     user_weight = athlete["weight"]
                     user_ratio = user_max_power / user_weight if user_weight > 0 else 0
-                    difference = pwr_ratio - user_ratio
+                    difference = top_ratio - user_ratio
                     st.metric("Your Power-to-Weight", f"{user_ratio:.2f} W/kg", delta=f"{-difference:.2f} W/kg")
-                    
-                    # Create comparison chart
                     fig = px.bar(
                         x=["You", "Best Power-to-Weight Athlete"],
-                        y=[user_ratio, pwr_ratio],
+                        y=[user_ratio, top_ratio],
                         title="Power-to-Weight Ratio Comparison"
                     )
                     st.plotly_chart(fig, use_container_width=True)

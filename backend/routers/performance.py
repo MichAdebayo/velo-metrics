@@ -23,7 +23,7 @@ def get_all_performances(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     
-    
+
 @router.post("/add_performance")
 def add_performance(performances: List[AthletePerformance], current_user: dict = Depends(get_current_user)):
     try:
@@ -136,21 +136,23 @@ def get_stats():
 
         conn.close()
 
-        def make_athlete_info(row):
-            if not row:
-                return None
-            return {
-                "id": row[0],
-                "username": row[1],
-                "first_name": row[2],
-                "last_name": row[3]
+        # Prepare direct metric values for dashboard comparison
+        stats = {
+            "strongest_athlete": {
+                "id": strongest[0] if strongest else None,
+                "max_power": strongest[4] if strongest else None
+            },
+            "highest_vo2max": {
+                "id": highest_vo2max[0] if highest_vo2max else None,
+                "max_vo2": highest_vo2max[4] if highest_vo2max else None
+            },
+            "best_power_weight_ratio": {
+                "id": best_ratio[0] if best_ratio else None,
+                "ratio": best_ratio[4] if best_ratio else None,
+                "weight": best_ratio[3] if best_ratio else None  # Note: fix index if needed
             }
-
-        return StatsResponseWithNames(
-            strongest_athlete=make_athlete_info(strongest),
-            highest_vo2max=make_athlete_info(highest_vo2max),
-            best_power_weight_ratio=make_athlete_info(best_ratio)
-        )
+        }
+        return stats
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
