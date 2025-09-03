@@ -20,20 +20,6 @@ users_df = get_all_users(st.session_state.token)
 stats = get_stats()
 
 # Quick debug helper visible to admins to diagnose API auth / endpoint issues
-with st.expander("Debug: API checks (show/hide)"):
-    token_present = bool(st.session_state.get("token"))
-    st.write("Token present:", token_present)
-    if token_present:
-        try:
-            headers = {"Authorization": f"Bearer {st.session_state.token}"}
-            resp1 = requests.get(f"{API_URL}/users/athletes-with-performance", headers=headers)
-            st.write("/users/athletes-with-performance ->", resp1.status_code, "| rows:", len(resp1.json()) if resp1.status_code == 200 else "-")
-            resp2 = requests.get(f"{API_URL}/performance/all_performances", headers=headers)
-            st.write("/performance/all_performances ->", resp2.status_code, "| rows:", len(resp2.json()) if resp2.status_code == 200 else "-")
-        except Exception as e:
-            st.write("API check error:", str(e))
-    else:
-        st.info("Not logged in or token missing — log in as admin to run API checks.")
 
 tab1, tab2 = st.tabs(["Overview & Trends", "Compare Athletes"])
 
@@ -61,7 +47,13 @@ with tab1:
         # Strongest Athlete
         strongest = stats["strongest_athlete"]
         if strongest:
-            st.write(f"**Strongest Athlete:** {strongest['first_name']} {strongest['last_name']} (@{strongest['username']})")
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+            user_response = requests.get(f"{API_URL}/users/{strongest['id']}", headers=headers)
+            if user_response.status_code == 200:
+                user_data = user_response.json()
+                st.write(f"**Strongest Athlete:** {user_data.get('first_name', '')} {user_data.get('last_name', '')} (@{user_data.get('user_name', '')})")
+            else:
+                st.write(f"**Strongest Athlete ID:** {strongest['id']}")
             strongest_id = strongest['id']
             if not st.session_state.show_strongest:
                 if st.button("View Strongest Athlete Details", key="view_strongest"):
@@ -70,15 +62,11 @@ with tab1:
                 if st.button("Minimize Strongest Athlete Details", key="min_strongest"):
                     st.session_state.show_strongest = False
                 else:
-                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                    user_response = requests.get(f"{API_URL}/users/{strongest_id}", headers=headers)
                     athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{strongest_id}", headers=headers)
                     performance_response = requests.get(f"{API_URL}/performance/user/{strongest_id}", headers=headers)
-                    if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
-                        user_data = user_response.json()
+                    if athlete_response.status_code == 200 and performance_response.status_code == 200:
                         athlete_data = athlete_response.json()["athlete"]
                         performance_data = performance_response.json()
-                        st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
                         st.write(f"**Age:** {athlete_data['age']}")
                         st.write(f"**Gender:** {athlete_data['gender']}")
                         max_power = max(p['power_max'] for p in performance_data) if performance_data else 0
@@ -88,14 +76,20 @@ with tab1:
                             fig = px.line(df, x="test_type", y="power_max", title="Power by Test Type")
                             st.plotly_chart(fig, use_container_width=True)
                     else:
-                        st.error(f"Failed to load athlete details. Status codes: user={user_response.status_code}, athlete={athlete_response.status_code}, performance={performance_response.status_code}")
+                        st.error(f"Failed to load athlete details. Status codes: athlete={athlete_response.status_code}, performance={performance_response.status_code}")
         else:
             st.write("No strongest athlete found.")
 
         # Highest VO2 Max Athlete
         vo2max = stats["highest_vo2max"]
         if vo2max:
-            st.write(f"**Highest VO2 Max Athlete:** {vo2max['first_name']} {vo2max['last_name']} (@{vo2max['username']})")
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+            user_response = requests.get(f"{API_URL}/users/{vo2max['id']}", headers=headers)
+            if user_response.status_code == 200:
+                user_data = user_response.json()
+                st.write(f"**Highest VO2 Max Athlete:** {user_data.get('first_name', '')} {user_data.get('last_name', '')} (@{user_data.get('user_name', '')})")
+            else:
+                st.write(f"**Highest VO2 Max Athlete ID:** {vo2max['id']}")
             vo2max_id = vo2max['id']
             if not st.session_state.show_vo2max:
                 if st.button("View Highest VO2 Max Athlete Details", key="view_vo2max"):
@@ -104,15 +98,11 @@ with tab1:
                 if st.button("Minimize Highest VO2 Max Athlete Details", key="min_vo2max"):
                     st.session_state.show_vo2max = False
                 else:
-                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                    user_response = requests.get(f"{API_URL}/users/{vo2max_id}", headers=headers)
                     athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{vo2max_id}", headers=headers)
                     performance_response = requests.get(f"{API_URL}/performance/user/{vo2max_id}", headers=headers)
-                    if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
-                        user_data = user_response.json()
+                    if athlete_response.status_code == 200 and performance_response.status_code == 200:
                         athlete_data = athlete_response.json()["athlete"]
                         performance_data = performance_response.json()
-                        st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
                         st.write(f"**Age:** {athlete_data['age']}")
                         st.write(f"**Gender:** {athlete_data['gender']}")
                         max_vo2 = max(p['vo2_max'] for p in performance_data) if performance_data else 0
@@ -122,14 +112,20 @@ with tab1:
                             fig = px.line(df, x="test_type", y="vo2_max", title="VO2 Max by Test Type")
                             st.plotly_chart(fig, use_container_width=True)
                     else:
-                        st.error(f"Failed to load athlete details. Status codes: user={user_response.status_code}, athlete={athlete_response.status_code}, performance={performance_response.status_code}")
+                        st.error(f"Failed to load athlete details. Status codes: athlete={athlete_response.status_code}, performance={performance_response.status_code}")
         else:
             st.write("No highest VO2 max athlete found.")
 
         # Best Power-to-Weight Ratio Athlete
         pwr = stats["best_power_weight_ratio"]
         if pwr:
-            st.write(f"**Best Power-to-Weight Ratio Athlete:** {pwr['first_name']} {pwr['last_name']} (@{pwr['username']})")
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+            user_response = requests.get(f"{API_URL}/users/{pwr['id']}", headers=headers)
+            if user_response.status_code == 200:
+                user_data = user_response.json()
+                st.write(f"**Best Power-to-Weight Ratio Athlete:** {user_data.get('first_name', '')} {user_data.get('last_name', '')} (@{user_data.get('user_name', '')})")
+            else:
+                st.write(f"**Best Power-to-Weight Ratio Athlete ID:** {pwr['id']}")
             pwr_id = pwr['id']
             if not st.session_state.show_pwr:
                 if st.button("View Best Power-to-Weight Ratio Athlete Details", key="view_pwr"):
@@ -138,7 +134,6 @@ with tab1:
                 if st.button("Minimize Best Power-to-Weight Ratio Athlete Details", key="min_pwr"):
                     st.session_state.show_pwr = False
                 else:
-                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
                     athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{pwr_id}", headers=headers)
                     if athlete_response.status_code == 200:
                         athlete_data = athlete_response.json()["athlete"]
