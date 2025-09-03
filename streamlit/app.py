@@ -56,7 +56,6 @@ else:
             st.Page("pages/data_management.py", title="Data Management", icon="📥"),
             st.Page("pages/user_management.py", title="User Management", icon="👥"),
             st.Page("pages/performance_management.py", title="Performance Management", icon="📈"),
-            st.Page("pages/statistics.py", title="Statistics", icon="📊"),
         ]
         pg = st.navigation(pages)
         pg.run()
