@@ -30,6 +30,20 @@ def get_user(current_user: dict = Depends(get_current_user)):
     """
     return dict(current_user)
 
+# Get user details by ID (for dashboard detail view)
+@router.get("/users/{user_id}")
+def get_user_by_id(user_id: int, current_user: dict = Depends(get_current_user)):
+    if not current_user.get("is_staff"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, first_name, last_name, user_name, email, is_staff FROM User WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return dict(user)
+
 @router.get("/users")
 def get_all_users(current_user: dict = Depends(get_current_user)):
     if not current_user.get("is_staff"):

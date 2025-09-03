@@ -1,11 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from ..database import get_db_connection
+
 from ..models.performance import AthletePerformance, StatsResponseWithNames
 from ..utils.security import get_current_user
 
 router = APIRouter()
 
+
+# Get all performance records (for overall trends)
+@router.get("/all_performances")
+def get_all_performances(current_user: dict = Depends(get_current_user)):
+    if not current_user.get("is_staff"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Performance")
+        performances = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in performances]
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    
+    
 @router.post("/add_performance")
 def add_performance(performances: List[AthletePerformance], current_user: dict = Depends(get_current_user)):
     try:
@@ -84,7 +102,7 @@ def get_stats():
 
         # Get strongest athlete
         cursor.execute("""
-            SELECT u.user_name, p.power_max
+            SELECT u.id, u.user_name, u.first_name, u.last_name, p.power_max
             FROM Performance p
             JOIN User u ON p.user_id = u.id
             WHERE u.is_staff = 0
@@ -95,7 +113,7 @@ def get_stats():
 
         # Get highest VO2 max
         cursor.execute("""
-            SELECT u.user_name, p.vo2_max
+            SELECT u.id, u.user_name, u.first_name, u.last_name, p.vo2_max
             FROM Performance p
             JOIN User u ON p.user_id = u.id
             WHERE u.is_staff = 0
@@ -106,7 +124,7 @@ def get_stats():
 
         # Get best power-to-weight ratio
         cursor.execute("""
-            SELECT u.user_name, (p.power_max * 1.0 / a.weight) as ratio
+            SELECT u.id, u.user_name, u.first_name, u.last_name, (p.power_max * 1.0 / a.weight) as ratio
             FROM Performance p
             JOIN User u ON p.user_id = u.id
             JOIN Athlete a ON p.user_id = a.user_id
@@ -118,10 +136,20 @@ def get_stats():
 
         conn.close()
 
+        def make_athlete_info(row):
+            if not row:
+                return None
+            return {
+                "id": row[0],
+                "username": row[1],
+                "first_name": row[2],
+                "last_name": row[3]
+            }
+
         return StatsResponseWithNames(
-            strongest_athlete=strongest[0] if strongest else None,
-            highest_vo2max=highest_vo2max[0] if highest_vo2max else None,
-            best_power_weight_ratio=best_ratio[0] if best_ratio else None
+            strongest_athlete=make_athlete_info(strongest),
+            highest_vo2max=make_athlete_info(highest_vo2max),
+            best_power_weight_ratio=make_athlete_info(best_ratio)
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

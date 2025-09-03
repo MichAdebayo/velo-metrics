@@ -1,3 +1,16 @@
+# --- Added for dashboard statistics tab ---
+def get_performances_by_username(username):
+    """Get performances for a user by username"""
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    response = requests.get(f"{API_URL}/performance/by-username/{username}", headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    try:
+        import streamlit as st
+        st.error(f"Failed to get performances for username {username}")
+    except (ImportError, AttributeError):
+        print(f"Failed to get performances for username {username}")
+    return []
 import streamlit as st
 import requests
 import pandas as pd
