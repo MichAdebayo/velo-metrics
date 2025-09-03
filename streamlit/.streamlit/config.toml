@@ -1,0 +1,18 @@
+[theme]
+primaryColor = "#1E88E5"  # Blue color for primary elements
+backgroundColor = "#FFFFFF"  # White background
+secondaryBackgroundColor = "#F8F9FA"  # Light gray for sidebar
+textColor = "#212121"  # Dark text for readability
+font = "sans serif"  # Clean, modern font
+
+[server]
+enableCORS = false  # Disable CORS for easier network access
+enableXsrfProtection = true  # Keep XSRF protection for security
+port = 8501  # Default port
+
+[browser]
+serverAddress = "localhost"  # Change this to your IP address for network access
+gatherUsageStats = false  # Disable usage statistics for privacy
+
+[client]
+showSidebarNavigation = false
