@@ -39,23 +39,23 @@ if not performance_df.empty:
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Power", "Heart Rate", "VO2 Max", "Respiratory Frequency", "Cadence"])
     
     with tab1:
-        fig = px.line(performance_df, x="date", y="power_max", title="Maximum Power Over Time")
+        fig = px.line(performance_df, x="test_type", y="power_max", title="Maximum Power by Test Type")
         st.plotly_chart(fig, use_container_width=True)
     
     with tab2:
-        fig = px.line(performance_df, x="date", y="hr_max", title="Maximum Heart Rate Over Time")
+        fig = px.line(performance_df, x="test_type", y="hr_max", title="Maximum Heart Rate by Test Type")
         st.plotly_chart(fig, use_container_width=True)
     
     with tab3:
-        fig = px.line(performance_df, x="date", y="vo2_max", title="VO2 Max Over Time")
+        fig = px.line(performance_df, x="test_type", y="vo2_max", title="VO2 Max by Test Type")
         st.plotly_chart(fig, use_container_width=True)
     
     with tab4:
-        fig = px.line(performance_df, x="date", y="rf_max", title="Maximum Respiratory Frequency Over Time")
+        fig = px.line(performance_df, x="test_type", y="rf_max", title="Maximum Respiratory Frequency by Test Type")
         st.plotly_chart(fig, use_container_width=True)
     
     with tab5:
-        fig = px.line(performance_df, x="date", y="cadence_max", title="Maximum Cadence Over Time")
+        fig = px.line(performance_df, x="test_type", y="cadence_max", title="Maximum Cadence by Test Type")
         st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No performance data available yet.")
