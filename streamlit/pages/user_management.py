@@ -65,33 +65,39 @@ with tab1:
             col1, col2 = st.columns(2)
             
             with col1:
+                if "show_edit_form" not in st.session_state:
+                    st.session_state.show_edit_form = False
                 if st.button("Edit User"):
-                    # Show edit form
+                    st.session_state.show_edit_form = True
+                if st.session_state.show_edit_form:
                     with st.form("edit_user_form"):
                         first_name = st.text_input("First Name", value=selected_user['first_name'])
                         last_name = st.text_input("Last Name", value=selected_user['last_name'])
+                        user_name = st.text_input("Username", value=selected_user['user_name'])
                         email = st.text_input("Email", value=selected_user['email'])
+                        password = st.text_input("Password (leave blank to keep unchanged)", value="", type="password")
                         is_staff = st.checkbox("Is Coach/Admin", value=selected_user['is_staff'])
-                        
+
                         submit = st.form_submit_button("Update User")
-                        
+
                         if submit:
-                            # Call API to update user
                             headers = {"Authorization": f"Bearer {st.session_state.token}"}
                             data = {
                                 "first_name": first_name,
                                 "last_name": last_name,
+                                "user_name": user_name,
                                 "email": email,
-                                "is_staff": is_staff
+                                "password": password or "dummy_password",
+                                "is_staff": int(is_staff)
                             }
                             response = requests.patch(
                                 f"{API_URL}/users/{selected_user_id}",
                                 json=data,
                                 headers=headers
                             )
-                            
                             if response.status_code == 200:
                                 st.success("User updated successfully!")
+                                st.session_state.show_edit_form = False
                                 st.rerun()
                             else:
                                 st.error(f"Failed to update user: {response.json().get('detail', 'Unknown error')}")

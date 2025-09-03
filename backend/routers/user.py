@@ -71,15 +71,34 @@ def get_athletes_with_performance(current_user: dict = Depends(get_current_user)
     return athletes
 
 @router.patch("/users/{user_id}")
-def update_user(user_id: int, user: UserCreate, current_user: dict = Depends(get_current_user)):
+def update_user(user_id: int, user: dict, current_user: dict = Depends(get_current_user)):
     if not current_user.get("is_staff"):
         raise HTTPException(status_code=403, detail="Not authorized")
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE User SET first_name = ?, last_name = ?, email = ?, is_staff = ? WHERE id = ?", (user.first_name, user.last_name, user.email, int(user.is_staff), user_id))
-    conn.commit()
-    if cursor.rowcount == 0:
+    cursor.execute("SELECT first_name, last_name, user_name, email, password, is_staff FROM User WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
         raise HTTPException(status_code=404, detail="User not found")
+    # Use existing values if not provided in payload
+    first_name = user.get("first_name", row[0])
+    last_name = user.get("last_name", row[1])
+    user_name = user.get("user_name", row[2])
+    email = user.get("email", row[3])
+    password = user.get("password", None)
+    is_staff = int(user.get("is_staff", row[5]))
+    # Only update password if provided and not blank
+    if password and password != "dummy_password":
+        from ..utils.security import hash_password
+        password = hash_password(password)
+    else:
+        password = row[4]
+    cursor.execute(
+        "UPDATE User SET first_name = ?, last_name = ?, user_name = ?, email = ?, password = ?, is_staff = ? WHERE id = ?",
+        (first_name, last_name, user_name, email, password, is_staff, user_id)
+    )
+    conn.commit()
     conn.close()
     return {"message": "User updated successfully"}
 
