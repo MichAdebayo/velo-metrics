@@ -1,10 +1,10 @@
-# Athlete Performance Tracker
+# VeloMetrics: An athlete performance tracker
 
 <p align="center"> 
  <img src="https://github.com/user-attachments/assets/b2e309ad-9fdc-43cf-81e8-37b4a46e9d85" width="800" />
 </p>
 
-A full-stack web application for managing, visualizing, and analyzing cyclist performance data. Built with FastAPI (backend), Streamlit (frontend), and SQLite (database).
+VeloMetrics is a full-stack web application for cyclists. It provides a centralized platform to manage, visualize, and analyze key performance metrics. The application's architecture features a robust FastAPI backend for data processing, a user-friendly Streamlit frontend for interactive dashboards, and a fast, serverless SQLite database.
 
 ---
 
