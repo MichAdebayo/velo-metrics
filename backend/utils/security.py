@@ -17,7 +17,15 @@ password_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated=
 
 
 def hash_password(password: str) -> str:
-   return password_context.hash(password)
+   try:
+      return password_context.hash(password)
+   except Exception as e:
+      # If bcrypt backend isn't available, fall back to pbkdf2_sha256 explicitly
+      try:
+         return password_context.hash(password, scheme="pbkdf2_sha256")
+      except Exception:
+         # Let caller handle any further exceptions
+         raise
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

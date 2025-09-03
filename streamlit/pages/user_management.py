@@ -100,7 +100,11 @@ with tab1:
                                 st.session_state.show_edit_form = False
                                 st.rerun()
                             else:
-                                st.error(f"Failed to update user: {response.json().get('detail', 'Unknown error')}")
+                                try:
+                                    err = response.json().get('detail', response.text or 'Unknown error')
+                                except Exception:
+                                    err = response.text or 'Unknown error'
+                                st.error(f"Failed to update user: {err}")
             
             with col2:
                 if st.button("Delete User"):
@@ -117,7 +121,11 @@ with tab1:
                             st.success("User deleted successfully!")
                             st.rerun()
                         else:
-                            st.error(f"Failed to delete user: {response.json().get('detail', 'Unknown error')}")
+                            try:
+                                err = response.json().get('detail', response.text or 'Unknown error')
+                            except Exception:
+                                err = response.text or 'Unknown error'
+                            st.error(f"Failed to delete user: {err}")
     else:
         st.info("No users found.")
 
@@ -219,7 +227,11 @@ with tab3:
                             if response.status_code == 200:
                                 st.success("Athlete details updated successfully!")
                             else:
-                                st.error(f"Failed to update athlete details: {response.json().get('detail', 'Unknown error')}")
+                                try:
+                                    err = response.json().get('detail', response.text or 'Unknown error')
+                                except Exception:
+                                    err = response.text or 'Unknown error'
+                                st.error(f"Failed to update athlete details: {err}")
                     
                     # Add delete button
                     if st.button("Delete Athlete Details"):
@@ -233,7 +245,11 @@ with tab3:
                                 st.success("Athlete details deleted successfully!")
                                 st.rerun()
                             else:
-                                st.error(f"Failed to delete athlete details: {response.json().get('detail', 'Unknown error')}")
+                                try:
+                                    err = response.json().get('detail', response.text or 'Unknown error')
+                                except Exception:
+                                    err = response.text or 'Unknown error'
+                                st.error(f"Failed to delete athlete details: {err}")
                 
                 elif response.status_code == 404:
                     # Athlete details don't exist, show add form
