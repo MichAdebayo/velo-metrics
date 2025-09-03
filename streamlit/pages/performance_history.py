@@ -75,28 +75,26 @@ with tab1:
         for metric in metrics:
             if metric in filtered_df.columns:
                 fig.add_trace(go.Scatter(
-                    x=filtered_df['date'] if 'date' in filtered_df.columns else filtered_df.index,
+                    x=filtered_df['test_type'] if 'test_type' in filtered_df.columns else filtered_df.index,
                     y=filtered_df[metric],
                     mode='lines+markers',
                     name=metric
                 ))
-        
-        fig.update_layout(title="Metrics Over Time", xaxis_title="Date", yaxis_title="Value")
+        fig.update_layout(title="Metrics by Test Type", xaxis_title="Test Type", yaxis_title="Value")
         st.plotly_chart(fig, use_container_width=True)
-        
+
         # Show normalized comparison
         st.subheader("Normalized Comparison")
         fig2 = go.Figure()
         for metric in metrics:
             if f"{metric}_normalized" in normalized_df.columns:
                 fig2.add_trace(go.Scatter(
-                    x=normalized_df['date'] if 'date' in normalized_df.columns else normalized_df.index,
+                    x=normalized_df['test_type'] if 'test_type' in normalized_df.columns else normalized_df.index,
                     y=normalized_df[f"{metric}_normalized"],
                     mode='lines+markers',
                     name=metric
                 ))
-        
-        fig2.update_layout(title="Normalized Metrics (0-1 Scale)", xaxis_title="Date", yaxis_title="Normalized Value")
+        fig2.update_layout(title="Normalized Metrics (0-1 Scale)", xaxis_title="Test Type", yaxis_title="Normalized Value")
         st.plotly_chart(fig2, use_container_width=True)
 
 with tab2:
