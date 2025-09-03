@@ -75,9 +75,10 @@ def get_athletes_with_performance(current_user: dict = Depends(get_current_user)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT DISTINCT u.id, u.first_name, u.last_name, u.user_name, u.email, u.is_staff
+        SELECT DISTINCT u.id, u.first_name, u.last_name, u.user_name, u.email, u.is_staff, a.weight, a.height
         FROM User u
         JOIN Performance p ON u.id = p.user_id
+        JOIN Athlete a ON u.id = a.user_id
         WHERE u.is_staff = 0
     """)
     athletes = cursor.fetchall()

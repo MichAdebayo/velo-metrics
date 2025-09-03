@@ -31,33 +31,48 @@ with tab1:
     with col3:
         st.metric("Total Users", 0 if users_df.empty else len(users_df))
 
+
     st.subheader("Top Performers")
     if stats:
+        # Setup session state for toggles
+        if "show_strongest" not in st.session_state:
+            st.session_state.show_strongest = False
+        if "show_vo2max" not in st.session_state:
+            st.session_state.show_vo2max = False
+        if "show_pwr" not in st.session_state:
+            st.session_state.show_pwr = False
+
         # Strongest Athlete
         strongest = stats["strongest_athlete"]
         if strongest:
             st.write(f"**Strongest Athlete:** {strongest['first_name']} {strongest['last_name']} (@{strongest['username']})")
             strongest_id = strongest['id']
-            if st.button("View Strongest Athlete Details", key="view_strongest"):
-                headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                user_response = requests.get(f"{API_URL}/users/{strongest_id}", headers=headers)
-                athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{strongest_id}", headers=headers)
-                performance_response = requests.get(f"{API_URL}/performance/user/{strongest_id}", headers=headers)
-                if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
-                    user_data = user_response.json()
-                    athlete_data = athlete_response.json()["athlete"]
-                    performance_data = performance_response.json()
-                    st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
-                    st.write(f"**Age:** {athlete_data['age']}")
-                    st.write(f"**Gender:** {athlete_data['gender']}")
-                    max_power = max(p['power_max'] for p in performance_data) if performance_data else 0
-                    st.metric("Maximum Power", f"{max_power} W")
-                    if performance_data:
-                        df = pd.DataFrame(performance_data)
-                        fig = px.line(df, x="test_type", y="power_max", title="Power by Test Type")
-                        st.plotly_chart(fig, use_container_width=True)
+            if not st.session_state.show_strongest:
+                if st.button("View Strongest Athlete Details", key="view_strongest"):
+                    st.session_state.show_strongest = True
+            else:
+                if st.button("Minimize Strongest Athlete Details", key="min_strongest"):
+                    st.session_state.show_strongest = False
                 else:
-                    st.error(f"Failed to load athlete details. Status codes: user={user_response.status_code}, athlete={athlete_response.status_code}, performance={performance_response.status_code}")
+                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    user_response = requests.get(f"{API_URL}/users/{strongest_id}", headers=headers)
+                    athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{strongest_id}", headers=headers)
+                    performance_response = requests.get(f"{API_URL}/performance/user/{strongest_id}", headers=headers)
+                    if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
+                        user_data = user_response.json()
+                        athlete_data = athlete_response.json()["athlete"]
+                        performance_data = performance_response.json()
+                        st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
+                        st.write(f"**Age:** {athlete_data['age']}")
+                        st.write(f"**Gender:** {athlete_data['gender']}")
+                        max_power = max(p['power_max'] for p in performance_data) if performance_data else 0
+                        st.metric("Maximum Power", f"{max_power} W")
+                        if performance_data:
+                            df = pd.DataFrame(performance_data)
+                            fig = px.line(df, x="test_type", y="power_max", title="Power by Test Type")
+                            st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.error(f"Failed to load athlete details. Status codes: user={user_response.status_code}, athlete={athlete_response.status_code}, performance={performance_response.status_code}")
         else:
             st.write("No strongest athlete found.")
 
@@ -66,26 +81,32 @@ with tab1:
         if vo2max:
             st.write(f"**Highest VO2 Max Athlete:** {vo2max['first_name']} {vo2max['last_name']} (@{vo2max['username']})")
             vo2max_id = vo2max['id']
-            if st.button("View Highest VO2 Max Athlete Details", key="view_vo2max"):
-                headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                user_response = requests.get(f"{API_URL}/users/{vo2max_id}", headers=headers)
-                athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{vo2max_id}", headers=headers)
-                performance_response = requests.get(f"{API_URL}/performance/user/{vo2max_id}", headers=headers)
-                if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
-                    user_data = user_response.json()
-                    athlete_data = athlete_response.json()["athlete"]
-                    performance_data = performance_response.json()
-                    st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
-                    st.write(f"**Age:** {athlete_data['age']}")
-                    st.write(f"**Gender:** {athlete_data['gender']}")
-                    max_vo2 = max(p['vo2_max'] for p in performance_data) if performance_data else 0
-                    st.metric("Maximum VO2 Max", f"{max_vo2} ml/kg/min")
-                    if performance_data:
-                        df = pd.DataFrame(performance_data)
-                        fig = px.line(df, x="test_type", y="vo2_max", title="VO2 Max by Test Type")
-                        st.plotly_chart(fig, use_container_width=True)
+            if not st.session_state.show_vo2max:
+                if st.button("View Highest VO2 Max Athlete Details", key="view_vo2max"):
+                    st.session_state.show_vo2max = True
+            else:
+                if st.button("Minimize Highest VO2 Max Athlete Details", key="min_vo2max"):
+                    st.session_state.show_vo2max = False
                 else:
-                    st.error(f"Failed to load athlete details. Status codes: user={user_response.status_code}, athlete={athlete_response.status_code}, performance={performance_response.status_code}")
+                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    user_response = requests.get(f"{API_URL}/users/{vo2max_id}", headers=headers)
+                    athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{vo2max_id}", headers=headers)
+                    performance_response = requests.get(f"{API_URL}/performance/user/{vo2max_id}", headers=headers)
+                    if user_response.status_code == 200 and athlete_response.status_code == 200 and performance_response.status_code == 200:
+                        user_data = user_response.json()
+                        athlete_data = athlete_response.json()["athlete"]
+                        performance_data = performance_response.json()
+                        st.write(f"**Name:** {user_data['first_name']} {user_data['last_name']}")
+                        st.write(f"**Age:** {athlete_data['age']}")
+                        st.write(f"**Gender:** {athlete_data['gender']}")
+                        max_vo2 = max(p['vo2_max'] for p in performance_data) if performance_data else 0
+                        st.metric("Maximum VO2 Max", f"{max_vo2} ml/kg/min")
+                        if performance_data:
+                            df = pd.DataFrame(performance_data)
+                            fig = px.line(df, x="test_type", y="vo2_max", title="VO2 Max by Test Type")
+                            st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.error(f"Failed to load athlete details. Status codes: user={user_response.status_code}, athlete={athlete_response.status_code}, performance={performance_response.status_code}")
         else:
             st.write("No highest VO2 max athlete found.")
 
@@ -94,76 +115,89 @@ with tab1:
         if pwr:
             st.write(f"**Best Power-to-Weight Ratio Athlete:** {pwr['first_name']} {pwr['last_name']} (@{pwr['username']})")
             pwr_id = pwr['id']
-            headers = {"Authorization": f"Bearer {st.session_state.token}"}
-            athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{pwr_id}", headers=headers)
-            if athlete_response.status_code == 200:
-                athlete_data = athlete_response.json()["athlete"]
-                weight = athlete_data["weight"]
-                performance_response = requests.get(f"{API_URL}/performance/user/{pwr_id}", headers=headers)
-                if performance_response.status_code == 200:
-                    performance_data = performance_response.json()
-                    df = pd.DataFrame(performance_data)
-                    if not df.empty:
-                        df["ratio"] = df["power_max"] / weight
-                        st.write("### Power-to-Weight Ratio per Test Type")
-                        st.dataframe(df[["test_type", "ratio"]])
-                        fig = px.bar(df, x="test_type", y="ratio", title="Power-to-Weight Ratio by Test Type")
-                        st.plotly_chart(fig, use_container_width=True)
+            if not st.session_state.show_pwr:
+                if st.button("View Best Power-to-Weight Ratio Athlete Details", key="view_pwr"):
+                    st.session_state.show_pwr = True
+            else:
+                if st.button("Minimize Best Power-to-Weight Ratio Athlete Details", key="min_pwr"):
+                    st.session_state.show_pwr = False
+                else:
+                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{pwr_id}", headers=headers)
+                    if athlete_response.status_code == 200:
+                        athlete_data = athlete_response.json()["athlete"]
+                        weight = athlete_data["weight"]
+                        performance_response = requests.get(f"{API_URL}/performance/user/{pwr_id}", headers=headers)
+                        if performance_response.status_code == 200:
+                            performance_data = performance_response.json()
+                            df = pd.DataFrame(performance_data)
+                            if not df.empty:
+                                df["ratio"] = df["power_max"] / weight
+                                st.write("### Power-to-Weight Ratio per Test Type")
+                                st.dataframe(df[["test_type", "ratio"]])
+                                fig = px.bar(df, x="test_type", y="ratio", title="Power-to-Weight Ratio by Test Type")
+                                st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.error(f"Failed to load athlete details. Status code: {athlete_response.status_code}")
         else:
             st.write("No best power-to-weight ratio athlete found.")
 
-    # Overall Performance Trends
+    # Add spacing between sections
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.divider()
     st.subheader("Overall Performance Trends")
     try:
         headers = {"Authorization": f"Bearer {st.session_state.token}"}
         response = requests.get(f"{API_URL}/performance/all_performances", headers=headers)
-        if response.status_code == 200:
+        athletes_response = requests.get(f"{API_URL}/users/athletes-with-performance", headers=headers)
+        if response.status_code == 200 and athletes_response.status_code == 200:
             all_perf = pd.DataFrame(response.json())
-            if not all_perf.empty:
-                # Aggregate by test_type
-                # Add power-to-weight ratio aggregation
-                # For each row, get athlete weight
-                # Fetch all athletes
-                athlete_weights = {}
-                athlete_response = requests.get(f"{API_URL}/users/athletes-with-performance", headers=headers)
-                if athlete_response.status_code == 200:
-                    athletes_df = pd.DataFrame(athlete_response.json())
-                    for _, row in athletes_df.iterrows():
-                        athlete_weights[row["id"]] = row["weight"] if "weight" in row else None
+            athletes_df = pd.DataFrame(athletes_response.json())
+            if not all_perf.empty and not athletes_df.empty:
+                athlete_weights = dict(zip(athletes_df["id"], athletes_df["weight"]))
                 all_perf["weight"] = all_perf["user_id"].map(athlete_weights)
-                all_perf["power_weight_ratio"] = all_perf["power_max"] / all_perf["weight"]
+                all_perf["power_weight_ratio"] = all_perf.apply(lambda r: r["power_max"] / r["weight"] if r["weight"] not in [None, 0, np.nan] and r["weight"] > 0 else np.nan, axis=1)
                 agg = all_perf.groupby("test_type").agg({
-                    "power_max": ["mean", "max"],
-                    "vo2_max": ["mean", "max"],
-                    "hr_max": ["mean", "max"],
-                    "rf_max": ["mean", "max"],
-                    "cadence_max": ["mean", "max"],
-                    "power_weight_ratio": ["mean", "max"]
+                    "power_max": ["mean"],
+                    "vo2_max": ["mean"],
+                    "hr_max": ["mean"],
+                    "rf_max": ["mean"],
+                    "cadence_max": ["mean"],
+                    "power_weight_ratio": ["mean"]
                 }).reset_index()
-                agg.columns = ["test_type"] + [f"{metric}_{stat}" for metric, stat in agg.columns[1:]]
+                agg.columns = ["test_type"] + [f"{metric}_mean" for metric in ["power_max", "vo2_max", "hr_max", "rf_max", "cadence_max", "power_weight_ratio"]]
                 st.write("### Aggregated Performance by Test Type")
                 st.dataframe(agg)
                 fig = px.bar(agg, x="test_type", y="power_max_mean", title="Average Power by Test Type")
                 st.plotly_chart(fig, use_container_width=True)
-                fig2 = px.bar(agg, x="test_type", y="vo2_max_max", title="Max VO2 Max by Test Type")
+                fig2 = px.bar(agg, x="test_type", y="vo2_max_mean", title="Average VO2 Max by Test Type")
                 st.plotly_chart(fig2, use_container_width=True)
                 fig3 = px.bar(agg, x="test_type", y="power_weight_ratio_mean", title="Average Power-to-Weight Ratio by Test Type")
                 st.plotly_chart(fig3, use_container_width=True)
+                if agg["power_weight_ratio_mean"].isnull().all():
+                    st.warning("No valid weights found for athletes. Power-to-weight ratio plot is empty.")
             else:
                 st.info("No performance data available for aggregation.")
         else:
-            st.error("Failed to fetch overall performance data.")
+            st.error("Failed to fetch overall performance or athlete data.")
     except Exception as e:
         st.error(f"Error loading overall performance trends: {str(e)}")
 
 with tab2:
     st.subheader("Compare Athletes")
-    users_df = get_all_users(st.session_state.token)
-    if not users_df.empty:
-        user_names = users_df['user_name'].tolist()
-        user_ids = users_df['id'].tolist()
-        name_to_id = dict(zip(users_df['user_name'], users_df['id']))
+    athletes_response = requests.get(f"{API_URL}/users/athletes-with-performance", headers={"Authorization": f"Bearer {st.session_state.token}"})
+    if athletes_response.status_code == 200:
+        athletes_df = pd.DataFrame(athletes_response.json())
+        if not athletes_df.empty:
+            user_names = athletes_df['user_name'].tolist()
+            user_ids = athletes_df['id'].tolist()
+            name_to_id = dict(zip(athletes_df['user_name'], athletes_df['id']))
+        else:
+            user_names = []
+            user_ids = []
+            name_to_id = {}
     else:
+        st.error("Failed to fetch athlete data for comparison.")
         user_names = []
         user_ids = []
         name_to_id = {}
@@ -176,33 +210,28 @@ with tab2:
         for aid in selected_ids:
             perfs = get_performances(aid)
             if perfs:
-                athlete_row = users_df[users_df['id'] == aid].iloc[0]
+                athlete_row = athletes_df[athletes_df['id'] == aid].iloc[0]
                 athlete_name = f"{athlete_row['first_name']} {athlete_row['last_name']}"
-                # Fetch athlete weight
-                headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                athlete_response = requests.get(f"{API_URL}/athletes/get_athlete_details/{aid}", headers=headers)
-                if athlete_response.status_code == 200:
-                    athlete_data = athlete_response.json()["athlete"]
-                    weight = athlete_data["weight"]
-                else:
-                    weight = np.nan
+                weight = athlete_row["weight"] if "weight" in athlete_row else np.nan
                 for perf in perfs:
                     compare_data.append({
                         "athlete_name": athlete_name,
                         "test_type": perf["test_type"],
                         "power_max": perf["power_max"],
                         "vo2_max": perf["vo2_max"],
-                        "power_weight_ratio": perf["power_max"] / weight if weight else np.nan
+                        "power_weight_ratio": perf["power_max"] / weight if weight not in [None, 0, np.nan] and weight > 0 else np.nan
                     })
         compare_df = pd.DataFrame(compare_data)
         if not compare_df.empty:
             st.write("### Grouped Bar Charts for Selected Athletes")
-            fig = px.bar(compare_df, x="test_type", y="power_max", color="athlete_name", barmode="group", title="Power Max Comparison")
+            fig = px.bar(compare_df, x="test_type", y="power_max", color="athlete_name", barmode="group", title="Average Power Comparison")
             st.plotly_chart(fig, use_container_width=True)
-            fig2 = px.bar(compare_df, x="test_type", y="vo2_max", color="athlete_name", barmode="group", title="VO2 Max Comparison")
+            fig2 = px.bar(compare_df, x="test_type", y="vo2_max", color="athlete_name", barmode="group", title="Average VO2 Max Comparison")
             st.plotly_chart(fig2, use_container_width=True)
-            fig3 = px.bar(compare_df, x="test_type", y="power_weight_ratio", color="athlete_name", barmode="group", title="Power-to-Weight Ratio Comparison")
+            fig3 = px.bar(compare_df, x="test_type", y="power_weight_ratio", color="athlete_name", barmode="group", title="Average Power-to-Weight Ratio Comparison")
             st.plotly_chart(fig3, use_container_width=True)
+            if compare_df["power_weight_ratio"].isnull().all():
+                st.warning("No valid weights found for selected athletes. Power-to-weight ratio plot is empty.")
         else:
             st.info("No performance data available for selected athletes.")
     else:
