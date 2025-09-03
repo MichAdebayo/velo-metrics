@@ -54,7 +54,7 @@ def get_all_users(current_user: dict = Depends(get_current_user)):
     cursor.execute("SELECT id, first_name, last_name, user_name, email, is_staff FROM User")
     users = cursor.fetchall()
     conn.close()
-    return users
+    return [dict(row) for row in users]
 
 @router.get("/users/by-username/{username}")
 def get_user_by_username(username: str, current_user: dict = Depends(get_current_user)):
@@ -67,7 +67,7 @@ def get_user_by_username(username: str, current_user: dict = Depends(get_current
     conn.close()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return dict(user)
 
 @router.get("/users/athletes-with-performance")
 def get_athletes_with_performance(current_user: dict = Depends(get_current_user)):

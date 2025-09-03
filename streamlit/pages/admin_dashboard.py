@@ -225,13 +225,20 @@ with tab2:
 
     if selected_ids:
         compare_data = []
+        headers = {"Authorization": f"Bearer {st.session_state.token}"}
         for aid in selected_ids:
-            perfs = get_performances(aid)
+            # fetch performances directly to avoid possible utility scoping issues
+            perf_resp = requests.get(f"{API_URL}/performance/user/{aid}", headers=headers)
+            if perf_resp.status_code == 200:
+                perfs = perf_resp.json()
+            else:
+                perfs = []
+
             if perfs:
                 user_row = users_df_local[users_df_local['id'] == aid].iloc[0]
                 athlete_name = f"{user_row['first_name']} {user_row['last_name']}"
                 # fetch weight from athlete endpoint
-                athlete_resp = requests.get(f"{API_URL}/athletes/get_athlete_details/{aid}", headers={"Authorization": f"Bearer {st.session_state.token}"})
+                athlete_resp = requests.get(f"{API_URL}/athletes/get_athlete_details/{aid}", headers=headers)
                 weight = None
                 if athlete_resp.status_code == 200:
                     weight = athlete_resp.json().get('athlete', {}).get('weight')

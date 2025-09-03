@@ -62,7 +62,8 @@ async def get_athlete(user_id: int, current_user: dict = Depends(get_current_use
     try:
         cursor.execute("SELECT * FROM Athlete WHERE user_id = ?", (user_id,))
         if athlete_record := cursor.fetchone(): # Map athlete_record to a schema/dict before returning
-            return {"athlete": athlete_record}
+            # sqlite3.Row is not JSON serializable directly; convert to dict
+            return {"athlete": dict(athlete_record)}
         else:
             raise HTTPException(status_code=404, detail="Athlete details not found")
     except sqlite3.Error as e:
