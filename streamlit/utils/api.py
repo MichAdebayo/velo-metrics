@@ -27,7 +27,13 @@ def get_user_info_by_username(username, token):
 
     if response.status_code == 200:
         return response.json()
-    st.error("Failed to get user information")
+    
+    # Handle error gracefully - don't use st.error if streamlit is not available
+    try:
+        import streamlit as st
+        st.error("Failed to get user information")
+    except (ImportError, AttributeError):
+        print("Failed to get user information")
     return None
 
 def get_athlete_details(user_id, token):
@@ -37,7 +43,13 @@ def get_athlete_details(user_id, token):
 
     if response.status_code == 200:
         return response.json()["athlete"]
-    st.error("Failed to get athlete details")
+    
+    # Handle error gracefully
+    try:
+        import streamlit as st
+        st.error("Failed to get athlete details")
+    except (ImportError, AttributeError):
+        print("Failed to get athlete details")
     return None
 
 def get_performance_history(user_id, token):
@@ -47,7 +59,13 @@ def get_performance_history(user_id, token):
 
     if response.status_code == 200:
         return pd.DataFrame(response.json())
-    st.error("Failed to get performance history")
+    
+    # Handle error gracefully
+    try:
+        import streamlit as st
+        st.error("Failed to get performance history")
+    except (ImportError, AttributeError):
+        print("Failed to get performance history")
     return pd.DataFrame()
 
 
@@ -57,7 +75,13 @@ def get_stats():
 
     if response.status_code == 200:
         return response.json()
-    st.error("Failed to get statistics")
+    
+    # Handle error gracefully
+    try:
+        import streamlit as st
+        st.error("Failed to get statistics")
+    except (ImportError, AttributeError):
+        print("Failed to get statistics")
     return None
 
 def get_all_users(token):
@@ -67,7 +91,13 @@ def get_all_users(token):
 
     if response.status_code == 200:
         return pd.DataFrame(response.json())
-    st.error("Failed to get users")
+    
+    # Handle error gracefully
+    try:
+        import streamlit as st
+        st.error("Failed to get users")
+    except (ImportError, AttributeError):
+        print("Failed to get users")
     return pd.DataFrame()
 
 def register_user(user_data, token):
@@ -113,10 +143,20 @@ def get_performances(user_id):
 
         if response.status_code == 200:
             return response.json()
-        st.error(f"Impossible de récupérer les performances (Status: {response.status_code})")
+        
+        # Handle error gracefully
+        try:
+            import streamlit as st
+            st.error(f"Impossible de récupérer les performances (Status: {response.status_code})")
+        except (ImportError, AttributeError):
+            print(f"Impossible de récupérer les performances (Status: {response.status_code})")
         return []
     except Exception as e:
-        st.error(f"Erreur: {str(e)}")
+        try:
+            import streamlit as st
+            st.error(f"Erreur: {str(e)}")
+        except (ImportError, AttributeError):
+            print(f"Erreur: {str(e)}")
         return []
 
 
@@ -162,10 +202,20 @@ def update_performance(performance_id, power, vo2_max, heart_rate, respiration_f
 
         if response.status_code in {200, 202}:
             return True
-        st.error(f"Erreur de mise à jour: {response.json().get('detail', 'Erreur inconnue')}")
+        
+        # Handle error gracefully
+        try:
+            import streamlit as st
+            st.error(f"Erreur de mise à jour: {response.json().get('detail', 'Erreur inconnue')}")
+        except (ImportError, AttributeError):
+            print(f"Erreur de mise à jour: {response.json().get('detail', 'Erreur inconnue')}")
         return False
     except Exception as e:
-        st.error(f"Erreur: {str(e)}")
+        try:
+            import streamlit as st
+            st.error(f"Erreur: {str(e)}")
+        except (ImportError, AttributeError):
+            print(f"Erreur: {str(e)}")
         return False
 
 def delete_performance(performance_id):
@@ -178,22 +228,35 @@ def delete_performance(performance_id):
 
         if response.status_code in {200, 202, 204}:
             return True
-        st.error(f"Erreur de suppression: {response.json().get('detail', 'Erreur inconnue')}")
+        
+        # Handle error gracefully
+        try:
+            import streamlit as st
+            st.error(f"Erreur de suppression: {response.json().get('detail', 'Erreur inconnue')}")
+        except ImportError:
+            print(f"Erreur de suppression: {response.json().get('detail', 'Erreur inconnue')}")
         return False
     except Exception as e:
-        st.error(f"Erreur: {str(e)}")
+        try:
+            import streamlit as st
+            st.error(f"Erreur: {str(e)}")
+        except ImportError:
+            print(f"Erreur: {str(e)}")
         return False
     
-def get_performances_by_username(username):
-    try:
-        headers = {"Authorization": f"Bearer {st.session_state.token}"}
-        response = requests.get(f"{API_URL}/performance/user_name/{username}", headers=headers)
+def get_athletes_with_performance(token):
+    """Get all athletes who have performance data (admin only)"""
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{API_URL}/users/athletes-with-performance", headers=headers)
 
-        if response.status_code == 200:
-            return response.json()
-        st.error(f"Impossible de récupérer les performances pour {username}")
-        return []
-    except Exception as e:
-        st.error(f"Erreur: {str(e)}")
-        return []
+    if response.status_code == 200:
+        return pd.DataFrame(response.json())
+    
+    # Handle error gracefully
+    try:
+        import streamlit as st
+        st.error("Failed to get athletes with performance data")
+    except (ImportError, AttributeError):
+        print("Failed to get athletes with performance data")
+    return pd.DataFrame()
     

@@ -37,7 +37,7 @@ app.add_middleware(
 # Include routers
 app.include_router(user.router)
 app.include_router(athlete.router)
-app.include_router(performance.router)
+app.include_router(performance.router, prefix="/performance")
 app.include_router(auth.router)
 
 @app.get("/")

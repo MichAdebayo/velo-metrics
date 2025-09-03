@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from ..database import get_db_connection
 from ..models.performance import AthletePerformance, StatsResponseWithNames
+from ..utils.security import get_current_user
 
 router = APIRouter()
 
 @router.post("/add_performance")
-def add_performance(performances: List[AthletePerformance]):
+def add_performance(performances: List[AthletePerformance], current_user: dict = Depends(get_current_user)):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -29,7 +30,7 @@ def add_performance(performances: List[AthletePerformance]):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 @router.get("/user/{user_id}")
-def get_user_performances(user_id: int):
+def get_user_performances(user_id: int, current_user: dict = Depends(get_current_user)):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -41,7 +42,7 @@ def get_user_performances(user_id: int):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 @router.patch("/{performance_id}")
-def update_performance(performance_id: int, performance: AthletePerformance):
+def update_performance(performance_id: int, performance: AthletePerformance, current_user: dict = Depends(get_current_user)):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -64,7 +65,7 @@ def update_performance(performance_id: int, performance: AthletePerformance):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 @router.delete("/{performance_id}")
-def delete_performance(performance_id: int):
+def delete_performance(performance_id: int, current_user: dict = Depends(get_current_user)):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -126,7 +127,7 @@ def get_stats():
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 @router.get("/user_name/{username}")
-def get_performance_by_username(username: str):
+def get_performance_by_username(username: str, current_user: dict = Depends(get_current_user)):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
