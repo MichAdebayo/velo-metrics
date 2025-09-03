@@ -70,7 +70,8 @@ def create_performance_table():
         """
         CREATE TABLE IF NOT EXISTS Performance(
             performance_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL, 
+            user_id INTEGER NOT NULL,
+            test_type TEXT NOT NULL,
             power_max REAL NOT NULL,
             hr_max REAL NOT NULL,
             vo2_max REAL NOT NULL,
